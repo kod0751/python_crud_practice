@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import Error
+import re
 
 load_dotenv()
 
@@ -60,4 +61,69 @@ def add_product():
             cursor.close()
             conn.close()
 
-add_product()
+
+def validate_email(email):
+    """이메일 형식 검증"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def user_registration():
+    """회원가입 시스템"""
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database='day2_practice'
+        )
+        cursor = conn.cursor()
+        
+        print("\n" + "=" * 50)
+        print("🎉 회원가입 시스템")
+        print("=" * 50 + "\n")
+        
+        while True:
+            # 이름 입력
+            name = input("👤 이름: ").strip()
+            if len(name) < 2:
+                print("❌ 이름은 2글자 이상이어야 합니다.\n")
+                continue
+            
+            # 이메일 입력
+            email = input("📧 이메일: ").strip()
+            
+            # 이메일 형식 검증
+            if not validate_email(email):
+                print("❌ 올바른 이메일 형식이 아닙니다.\n")
+                continue
+            
+            # 중복 확인
+            cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
+            if cursor.fetchone():
+                print(f"❌ '{email}'은 이미 사용 중입니다.\n")
+                continue
+            
+            # 데이터 추가
+            insert_query = "INSERT INTO users (name, email) VALUES (%s, %s)"
+            cursor.execute(insert_query, (name, email))
+            conn.commit()
+            
+            print("\n" + "=" * 50)
+            print("✅ 회원가입 완료!")
+            print("=" * 50)
+            print(f"👤 이름: {name}")
+            print(f"📧 이메일: {email}")
+            print(f"🆔 회원번호: {cursor.lastrowid}")
+            print("=" * 50 + "\n")
+            
+            break
+        
+    except Error as e:
+        print(f"❌ 데이터베이스 오류: {e}")
+        
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+user_registration()
