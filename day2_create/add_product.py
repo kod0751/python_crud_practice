@@ -126,4 +126,48 @@ def user_registration():
             cursor.close()
             conn.close()
 
-user_registration()
+def insert_numbers():
+    """1부터 5까지 숫자 저장"""
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database='day2_practice'
+        )
+        cursor = conn.cursor()
+        
+        # 테이블 생성
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS numbers (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                value INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB;
+        """)
+        
+        # 방법 1: 반복문으로 하나씩 추가
+        print("📝 방법 1: 반복문으로 하나씩 추가")
+        for i in range(1, 6):
+            cursor.execute("INSERT INTO numbers (value) VALUES (%s)", (i,))
+            print(f"  ✓ {i} 추가됨")
+        
+        conn.commit()
+        print(f"✅ {cursor.rowcount}개의 숫자가 추가되었습니다.\n")
+        
+        # 결과 확인
+        cursor.execute("SELECT * FROM numbers ORDER BY value")
+        results = cursor.fetchall()
+        
+        print("📋 저장된 숫자:")
+        print("  ", [row[1] for row in results])
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+        
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+insert_numbers()
