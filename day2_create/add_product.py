@@ -170,4 +170,93 @@ def insert_numbers():
             cursor.close()
             conn.close()
 
-insert_numbers()
+
+def insert_students_batch():
+    """학생 데이터 배치 입력 예제"""
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database='day2_practice'
+        )
+        cursor = conn.cursor()
+        
+        # 테이블 생성
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS students (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                grade INT NOT NULL,
+                score INT NOT NULL,
+                enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_grade (grade),
+                INDEX idx_score (score)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """)
+        
+        # 학생 데이터 (이름, 학년, 점수)
+        students = [
+            ('김학생', 1, 85),
+            ('이학생', 2, 92),
+            ('박학생', 1, 78),
+            ('최학생', 3, 95),
+            ('정학생', 2, 88),
+            ('강학생', 3, 91),
+            ('윤학생', 1, 82),
+            ('장학생', 2, 79)
+        ]
+        
+        # 배치 삽입
+        insert_query = "INSERT INTO students (name, grade, score) VALUES (%s, %s, %s)"
+        cursor.executemany(insert_query, students)
+        
+        conn.commit()
+        
+        print(f"✅ {len(students)}명의 학생 정보가 추가되었습니다.\n")
+        
+        # 성적순 조회
+        cursor.execute("""
+            SELECT name, grade, score 
+            FROM students 
+            ORDER BY score DESC
+        """)
+        
+        print("=" * 50)
+        print("📊 성적순 학생 목록")
+        print("=" * 50)
+        print(f"{'순위':<5} {'이름':<10} {'학년':<10} {'점수':<10}")
+        print("-" * 50)
+        
+        for rank, row in enumerate(cursor.fetchall(), 1):
+            medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else "  "
+            print(f"{medal} {rank:<3} {row[0]:<10} {row[1]}학년{'':<5} {row[2]}점")
+        
+        print("=" * 50)
+        
+        # 통계 정보
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total,
+                AVG(score) as avg_score,
+                MAX(score) as max_score,
+                MIN(score) as min_score
+            FROM students
+        """)
+        
+        stats = cursor.fetchone()
+        print("\n📈 통계 정보")
+        print(f"  총 학생 수: {stats[0]}명")
+        print(f"  평균 점수: {stats[1]:.2f}점")
+        print(f"  최고 점수: {stats[2]}점")
+        print(f"  최저 점수: {stats[3]}점")
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+        
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+insert_students_batch()
