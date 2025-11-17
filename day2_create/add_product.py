@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import Error
 import re
+from datetime import datetime
 
 load_dotenv()
 
@@ -259,4 +260,87 @@ def insert_students_batch():
             cursor.close()
             conn.close()
 
-insert_students_batch()
+def manage_orders():
+    """주문 관리 시스템"""
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database='day2_practice'
+        )
+        cursor = conn.cursor()
+        
+        # 주문 테이블 생성
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                product VARCHAR(100) NOT NULL,
+                quantity INT NOT NULL CHECK (quantity > 0),
+                order_date DATE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_order_date (order_date)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """)
+        
+        # 오늘 날짜
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # 주문 데이터
+        orders = [
+            ('노트북', 2, today),
+            ('마우스', 5, today),
+            ('키보드', 3, today),
+            ('모니터', 1, today),
+            ('헤드셋', 4, today)
+        ]
+        
+        # 데이터 추가
+        insert_query = "INSERT INTO orders (product, quantity, order_date) VALUES (%s, %s, %s)"
+        cursor.executemany(insert_query, orders)
+        
+        conn.commit()
+        
+        # 결과 출력
+        added_count = cursor.rowcount
+        print("\n" + "=" * 60)
+        print(f"✅ {added_count}개의 행이 추가되었습니다.")
+        print("=" * 60)
+        
+        # 전체 주문 확인
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        total_orders = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT SUM(quantity) FROM orders")
+        total_quantity = cursor.fetchone()[0]
+        
+        print(f"\n📦 전체 주문 건수: {total_orders}건")
+        print(f"📊 총 주문 수량: {total_quantity}개\n")
+        
+        # 주문 목록 출력
+        cursor.execute("""
+            SELECT id, product, quantity, order_date 
+            FROM orders 
+            ORDER BY id DESC
+        """)
+        
+        print("=" * 60)
+        print("📋 주문 내역")
+        print("=" * 60)
+        print(f"{'ID':<5} {'상품명':<15} {'수량':>10} {'주문일':<15}")
+        print("-" * 60)
+        
+        for row in cursor.fetchall():
+            print(f"{row[0]:<5} {row[1]:<15} {row[2]:>8}개 {row[3]}")
+        
+        print("=" * 60)
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+        
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+manage_orders()
