@@ -72,6 +72,40 @@ def find_product_by_name(product_name):
             cursor.close()
             conn.close()
 
+def search_products_by_price(min_price, max_price):
+    """가격 범위로 검색 - WHERE + BETWEEN"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT * FROM products 
+            WHERE price BETWEEN %s AND %s
+            ORDER BY price ASC
+        """, (min_price, max_price))
+        
+        products = cursor.fetchall()
+        
+        print("\n" + "=" * 70)
+        print(f"💰 가격 범위 검색: {min_price:,}원 ~ {max_price:,}원")
+        print("=" * 70)
+        
+        if products:
+            print(f"{'ID':<5} {'상품명':<15} {'가격':>15} {'재고':>10}")
+            print("-" * 70)
+            for p in products:
+                print(f"{p[0]:<5} {p[1]:<15} {p[2]:>12,}원 {p[3]:>10}개")
+            print("=" * 70)
+            print(f"총 {len(products)}개의 상품 발견")
+        else:
+            print("해당 가격대의 상품이 없습니다.")
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 if __name__ == "__main__":
-    find_product_by_name("노트북")
-    find_product_by_name("스마트워치")
+    search_products_by_price(50000, 150000)
