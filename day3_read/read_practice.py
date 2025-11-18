@@ -43,4 +43,35 @@ def read_all_products():
             cursor.close()
             conn.close()
 
-read_all_products()
+def find_product_by_name(product_name):
+    """상품명으로 검색 - fetchone() 연습"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM products WHERE name = %s", (product_name,))
+        product = cursor.fetchone()
+        
+        if product:
+            print("\n" + "=" * 50)
+            print(f"🔍 '{product_name}' 검색 결과")
+            print("=" * 50)
+            print(f"  ID: {product[0]}")
+            print(f"  상품명: {product[1]}")
+            print(f"  가격: {product[2]:,}원")
+            print(f"  재고: {product[3]}개")
+            print(f"  등록일: {product[4]}")
+            print("=" * 50)
+        else:
+            print(f"\n❌ '{product_name}' 상품을 찾을 수 없습니다.")
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+if __name__ == "__main__":
+    find_product_by_name("노트북")
+    find_product_by_name("스마트워치")
