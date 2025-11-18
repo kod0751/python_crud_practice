@@ -1,0 +1,46 @@
+
+import os
+from dotenv import load_dotenv
+import mysql.connector
+from mysql.connector import Error
+
+load_dotenv()
+
+def connect_db():
+    """데이터베이스 연결"""
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database='day2_practice'
+    )
+
+def read_all_products():
+    """전체 상품 조회 - fetchall() 연습"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM products")
+        products = cursor.fetchall()
+        
+        print("\n" + "=" * 70)
+        print("📦 전체 상품 목록")
+        print("=" * 70)
+        print(f"{'ID':<5} {'상품명':<15} {'가격':>15} {'재고':>10} {'등록일':<20}")
+        print("-" * 70)
+        
+        for product in products:
+            print(f"{product[0]:<5} {product[1]:<15} {product[2]:>12,}원 {product[3]:>10}개 {product[4]}")
+        
+        print("=" * 70)
+        print(f"총 {len(products)}개의 상품")
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+read_all_products()
