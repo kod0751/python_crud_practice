@@ -43,4 +43,47 @@ def read_all_students():
             cursor.close()
             conn.close()
 
-read_all_students()
+
+def find_students_by_grade(grade):
+    """학년별 학생 조회"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT name, score FROM students 
+            WHERE grade = %s
+            ORDER BY score DESC
+        """, (grade,))
+        
+        students = cursor.fetchall()
+        
+        print("\n" + "=" * 50)
+        print(f"📚 {grade}학년 학생 목록")
+        print("=" * 50)
+        
+        if students:
+            for idx, student in enumerate(students, 1):
+                print(f"  {idx}. {student[0]:<10} - {student[1]}점")
+            
+            # 해당 학년 평균
+            cursor.execute("""
+                SELECT AVG(score) FROM students WHERE grade = %s
+            """, (grade,))
+            avg = cursor.fetchone()[0]
+            print("-" * 50)
+            print(f"  {grade}학년 평균: {avg:.2f}점")
+        else:
+            print(f"  {grade}학년 학생이 없습니다.")
+        
+        print("=" * 50)
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+if __name__ == "__main__":
+  find_students_by_grade(3)
