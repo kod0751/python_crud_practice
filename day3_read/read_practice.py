@@ -143,6 +143,58 @@ def get_low_stock_products(threshold=20):
             cursor.close()
             conn.close()
             
+        
+def get_products_stats():
+    """상품 통계 정보 - 집계 함수"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        # 기본 통계
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_products,
+                SUM(stock) as total_stock,
+                AVG(price) as avg_price,
+                MAX(price) as max_price,
+                MIN(price) as min_price
+            FROM products
+        """)
+        
+        stats = cursor.fetchone()
+        
+        print("\n" + "=" * 50)
+        print("📊 상품 통계")
+        print("=" * 50)
+        print(f"  총 상품 수: {stats[0]}개")
+        print(f"  총 재고 수량: {stats[1]:,}개")
+        print(f"  평균 가격: {stats[2]:,.0f}원")
+        print(f"  최고가: {stats[3]:,}원")
+        print(f"  최저가: {stats[4]:,}원")
+        print("=" * 50)
+        
+        # 가장 비싼 상품
+        cursor.execute("""
+            SELECT name, price FROM products 
+            ORDER BY price DESC LIMIT 1
+        """)
+        expensive = cursor.fetchone()
+        print(f"\n💎 최고가 상품: {expensive[0]} ({expensive[1]:,}원)")
+        
+        # 가장 저렴한 상품
+        cursor.execute("""
+            SELECT name, price FROM products 
+            ORDER BY price ASC LIMIT 1
+        """)
+        cheap = cursor.fetchone()
+        print(f"💵 최저가 상품: {cheap[0]} ({cheap[1]:,}원)")
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
-    get_low_stock_products(20)
+    get_products_stats()
