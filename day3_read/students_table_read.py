@@ -117,5 +117,41 @@ def get_top_students(limit=3):
             cursor.close()
             conn.close()
 
+def search_students_by_score(min_score):
+    """특정 점수 이상 학생 검색"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT name, grade, score FROM students 
+            WHERE score >= %s
+            ORDER BY score DESC
+        """, (min_score,))
+        
+        students = cursor.fetchall()
+        
+        print("\n" + "=" * 50)
+        print(f"✨ {min_score}점 이상 학생")
+        print("=" * 50)
+        
+        if students:
+            for student in students:
+                grade_symbol = "🌟" if student[2] >= 90 else "⭐"
+                print(f"  {grade_symbol} {student[0]:<10} ({student[1]}학년) - {student[2]}점")
+            print("-" * 50)
+            print(f"  총 {len(students)}명")
+        else:
+            print(f"  {min_score}점 이상인 학생이 없습니다.")
+        
+        print("=" * 50)
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 if __name__ == "__main__":
-  get_top_students(3)
+  search_students_by_score(85)
