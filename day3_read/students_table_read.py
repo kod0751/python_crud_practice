@@ -85,5 +85,37 @@ def find_students_by_grade(grade):
             cursor.close()
             conn.close()
 
+def get_top_students(limit=3):
+    """상위권 학생 조회 - LIMIT 사용"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT name, grade, score FROM students 
+            ORDER BY score DESC 
+            LIMIT %s
+        """, (limit,))
+        
+        students = cursor.fetchall()
+        
+        print("\n" + "=" * 50)
+        print(f"🏆 상위 {limit}명")
+        print("=" * 50)
+        
+        medals = ["🥇", "🥈", "🥉"]
+        for idx, student in enumerate(students):
+            medal = medals[idx] if idx < 3 else "  "
+            print(f"{medal} {idx+1}등: {student[0]} ({student[1]}학년) - {student[2]}점")
+        
+        print("=" * 50)
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 if __name__ == "__main__":
-  find_students_by_grade(3)
+  get_top_students(3)
