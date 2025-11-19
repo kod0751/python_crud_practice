@@ -107,5 +107,42 @@ def search_products_by_price(min_price, max_price):
             cursor.close()
             conn.close()
 
+def get_low_stock_products(threshold=20):
+    """재고 부족 상품 조회 - WHERE 조건"""
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT * FROM products 
+            WHERE stock < %s
+            ORDER BY stock ASC
+        """, (threshold,))
+        
+        products = cursor.fetchall()
+        
+        print("\n" + "=" * 70)
+        print(f"⚠️  재고 부족 상품 (재고 {threshold}개 미만)")
+        print("=" * 70)
+        
+        if products:
+            print(f"{'ID':<5} {'상품명':<15} {'재고':>10} {'상태':<10}")
+            print("-" * 70)
+            for p in products:
+                status = "🔴 긴급" if p[3] < 10 else "🟡 주의"
+                print(f"{p[0]:<5} {p[1]:<15} {p[3]:>8}개 {status}")
+            print("=" * 70)
+            print(f"총 {len(products)}개 상품 재고 보충 필요")
+        else:
+            print("✅ 모든 상품의 재고가 충분합니다.")
+        
+    except Error as e:
+        print(f"❌ 오류: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+            
+
 if __name__ == "__main__":
-    search_products_by_price(50000, 150000)
+    get_low_stock_products(20)
