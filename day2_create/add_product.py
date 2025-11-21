@@ -8,8 +8,8 @@ from datetime import datetime
 load_dotenv()
 
 def add_product():
-  """새로운 상품 추가 함수"""
-  try:
+    """새로운 상품 추가 함수"""
+    try:
         conn = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
@@ -54,10 +54,10 @@ def add_product():
         
         print("=" * 70)
         
-  except Error as e:
+    except Error as e:
         print(f"❌ 오류: {e}")
         
-  finally:
+    finally:
         if conn.is_connected():
             cursor.close()
             conn.close()
