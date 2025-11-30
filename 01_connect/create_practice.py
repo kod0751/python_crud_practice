@@ -30,6 +30,15 @@ def create_database(connection, db_name):
   except Error as e:
     print(f"❌ 데이터베이스 생성 실패: {e}")
 
+def create_table(connection, create_table_query):
+  '테이블 생성'
+  try:
+    cursor = connection.cursor()
+    cursor.execute(create_table_query)
+    print("✅ 테이블 생성 완료!")
+  except Error as e:
+    print(f"❌ 테이블 생성 실패: {e}")
+
 
 
 conn = create_connection()
@@ -38,3 +47,18 @@ if conn:
   create_database(conn, 'study_db')
   conn.close()
 
+  conn = create_connection('study_db')
+
+  if conn:
+    # 4단계: books 테이블 생성
+    books_table = """
+    CREATE TABLE IF NOT EXISTS books (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(200) NOT NULL,
+        author VARCHAR(100),
+        price INT
+    )
+    """
+    create_table(conn, books_table)
+
+  conn.close()
