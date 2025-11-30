@@ -21,7 +21,20 @@ def create_connection(database=None):
     print(f"❌ 연결 실패: {e}")
     return None
 
+def create_database(connection, db_name):
+  '데이터베이스 생성'
+  try:
+    cursor = connection.cursor()
+    cursor.execute(f'CREATE DATABASE IF NOT EXISTS {db_name}')
+    print(f"✅ 데이터베이스 '{db_name}' 생성 완료!")
+  except Error as e:
+    print(f"❌ 데이터베이스 생성 실패: {e}")
+
 
 
 conn = create_connection()
+
+if conn:
+  create_database(conn, 'study_db')
+  conn.close()
 
